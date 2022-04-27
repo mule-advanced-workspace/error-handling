@@ -1,0 +1,39 @@
+NOTE: 
+	if you place on error propage/continue in Error Handling Section/flow
+		1, onErrorPropagate will propagater/send payoad, statuscode, reasonPhrase to source, if u decalre them in listner response section
+		2, onErrorContinue will propagater/send payoad to source status code will by default set to 200 OK
+		3, once flow exection shifted to error handling section, flow will not continuw exection even though u have used on error continue
+	if you place on error propage/continue in main flow
+		1. onErrorPropagate will return "false" to main flow, so flow execution stopes and shift to error handling section/flow
+		2, onErrorContinue will retun "True" to main flow, flow will not shift to error handling section and continue to execute main flow even either on error continue / propagae is there in error handling section
+
+
+Prefer : 
+	Always try to use On error contine in main flow
+	always try to use error propagate in error hanfling flow
+
+
+http://localhost:8081/onErrorPropagate and  http://localhost:8081/onErrorContinue - 
+
+	if u place on error propagate/continue in error handling section of main flow, both will behave same (flow stops
+		execution when any error is raised however onErrorPropagate will propagater/send payoad, statuscode, reasonPhrase to source
+		and on error continue will only send payload to source with 200 statuscode by default
+		
+http://localhost:8081/onErrorContinueInMainFlowAndErrorHandlingFLow - 
+
+	if u place onErrorcontinue in main flow (for specific connctor lets say A) and on error propagate/continue in error handling section of main flow, flow will continue to execute even though there is an error
+		raised at specific connctor(A) and flow will not  touch error handling section untill there is an error from
+		main flow after specific connector (A)
+		
+		
+http://localhost:8081/onErrorPropagateInMainFlowAndErrorHandlingFLow =
+
+	if u place onErrorPropagate in main flow (for specific connctor lets say A) and on error propagate in error handling section of main flow, flow will not continue to execute when there is an error
+		raised at specific connctor(A) and flow will move  to error handling section, if on error propagate is there in error handling section
+		then it will return  payoad, statuscode, reasonPhrase to source
+		
+http://localhost:8081/onErrorPropagateInMainFlowAndOnErrorContinueErrorHandlingFLow - 
+	if u place onErrorPropagate in main flow (for specific connctor lets say A) and on error continue in error handling section of main flow flow will not continue to execute when there is an error
+		raised at specific connctor(A) and flow will not  move  to error handling section
+		
+		

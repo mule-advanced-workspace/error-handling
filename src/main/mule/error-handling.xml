@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f02e647f-ca59-4c03-b7ce-92eeba94ade5" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="error-handlingFlow" doc:id="4cd99edf-8b86-4118-82b7-e26d27a7779e" >
+		<http:listener doc:name="Listener" doc:id="1d637335-0f76-448d-a8f1-60f2f2519872" config-ref="HTTP_Listener_config" path="/onErrorPropagate">
+			<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="1c49685d-6ebe-427d-9639-2360df485156" message="start log"/>
+		<raise-error doc:name="Raise error" doc:id="253d359d-d6e0-4bf7-a989-63a16f6a23a9" type="DEMO:INVALID"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ba38ec8e-946e-43a4-ab04-b77ca048758a" message="end log"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="874effd5-5571-4568-90bc-06bd2eb7d46a" type="DEMO:INVALID">
+				<logger level="INFO" doc:name="Logger" doc:id="460d518a-9f70-4e96-bc15-596ed1719cf9" message="error raised"/>
+				<ee:transform doc:name="Transform Message" doc:id="2fe0c219-03be-47e0-9b7c-9ccd409778bc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+						<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="error-handlingFlow1" doc:id="6cd73d49-b3c7-4744-ab95-6e172100da73" >
+		<http:listener doc:name="Listener" doc:id="afa017bb-d868-451d-a0cb-4ae6a900d1b5" config-ref="HTTP_Listener_config" path="/onErrorContinue">
+				<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="8ab2c99a-d77d-49c1-abe3-79d0def8dac4" message="start log"/>
+		<raise-error doc:name="Raise error" doc:id="92776f05-1852-4456-960d-dc8fe40a016d" type="DEMO:INVALID"/>
+		<logger level="INFO" doc:name="Logger" doc:id="426659b6-eabd-48f9-9ed0-c26cd22c6e2f" message="end log"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="249898b1-d911-4068-9aea-8d457cf910ae" type="DEMO:INVALID">
+				<logger level="INFO" doc:name="Logger" doc:id="b819c047-ca82-4e31-819e-229857830335" message="error raised"/>
+				<ee:transform doc:name="Transform Message" doc:id="d6e5ecc5-cdc6-42e0-a41a-c101cf4e78a6" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+						<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="error-handlingFlow2" doc:id="db1dc9e0-ec99-4b0b-a7a2-7f4787cf3a7c" >
+		<http:listener doc:name="" doc:id="62874be1-4fca-45ab-bab5-f832f35d7cd4" config-ref="HTTP_Listener_config" path="/onErrorContinueInMainFlowAndErrorHandlingFLow" >
+			<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="60dd7215-65dc-4f80-b1fd-1f57c6676853" message="start log" />
+		<try doc:name="Try" doc:id="4fafb4d3-c325-45d6-ac76-5bb2e2557917" >
+			<raise-error doc:name="Copy_of_Raise error" doc:id="3774f850-8fdf-4a1c-87cb-c6934cbb11cf" type="DEMO:INVALID" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_On Error Continue" doc:id="a50d57d7-c726-46f5-8b99-470ec9f67433" type="DEMO:INVALID" >
+					<logger level="INFO" doc:name="Copy_of_Logger" doc:id="2bb98eed-99f2-4477-937a-a7d0de95a899" message="error raised" />
+					<ee:transform doc:name="Copy_of_Transform Message" doc:id="772f12b5-0d6e-4e3f-98a3-b4fe8646f242" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+							<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="20441ead-b6f9-45b9-afe8-733ff7e6e392" message="end log" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_On Error Continue" doc:id="a5700866-c6c1-4d6d-b6c3-42ce087e5e27" type="EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED" >
+				<logger level="INFO" doc:name="Copy_of_Logger" doc:id="d8d7129f-9695-4b14-b8b9-cb2212356eb9" message="error raised" />
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="bf00978a-0544-44fc-8050-de51c8565c10" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+						<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="Copy_of_error-handlingFlow" doc:id="6241e2ce-7341-47bc-96d1-2fed7647079c" >
+		<http:listener doc:name="Copy_of_" doc:id="086b016f-ab2d-4880-91b2-1f0d3bb8ee49" config-ref="HTTP_Listener_config" path="/onErrorPropagateInMainFlowAndErrorHandlingFLow" >
+			<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="1b2ad111-25a4-4bb2-889d-7ba09627685f" message="start log" />
+		<try doc:name="Copy_of_Try" doc:id="f141fb92-5bbd-4614-8832-42b14e58c604" >
+			<raise-error doc:name="Copy_of_Copy_of_Raise error" doc:id="782e4809-b398-43fe-b318-8cdc14bfea85" type="DEMO:INVALID" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_On Error Propagate" doc:id="540de550-8d6c-4bd7-aaf9-f8a941e7ab7a" type="DEMO:INVALID" >
+					<logger level="INFO" doc:name="Copy_of_Logger" doc:id="4f1beb99-e50b-44bc-ae81-8b8c22609670" message="error raised" />
+					<ee:transform doc:name="Copy_of_Transform Message" doc:id="70864b6b-ee8d-44c4-814f-3c46407282de" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+							<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="fd810dd2-2fc4-4c97-8b7a-d26c122a3d93" message="end log" />
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_Copy_of_On Error Propagate" doc:id="7bce34cd-cfd8-4ffe-a9ce-7f167342d6ed" type="DEMO:INVALID" >
+				<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="806522c2-d0d2-4b50-994d-8f48da6f840f" message="error raised" />
+				<ee:transform doc:name="Copy_of_Copy_of_Transform Message" doc:id="78e937fb-8a71-42bd-a573-b00f140efea3" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+						<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="Copy_of_error-handlingFlow1" doc:id="a96aad09-300b-47ad-a6ce-84172ef488e4" >
+		<http:listener doc:name="" doc:id="83a149e3-3b0a-42e3-8ade-e5898b14a848" config-ref="HTTP_Listener_config" path="/onErrorPropagateInMainFlowAndOnErrorContinueErrorHandlingFLow" >
+			<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="49d0591f-c792-4e22-afa5-ec9dc1a7a0b3" message="start log" />
+		<try doc:name="Copy_of_Copy_of_Try" doc:id="d7f183b7-0fb5-476d-9736-39101aa599bd" >
+			<raise-error doc:name="Copy_of_Raise error" doc:id="89cd163a-9d7b-43d2-a75e-311bf15b1694" type="DEMO:INVALID" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_Copy_of_On Error Propagate" doc:id="d2b48628-9a52-4c3b-9cea-2ae5fc5bd38b" type="DEMO:INVALID" >
+					<logger level="INFO" doc:name="Copy_of_Logger" doc:id="78ddfed0-0517-4d0d-9997-2c74343f3bc9" message="error raised" />
+					<ee:transform doc:name="Copy_of_Transform Message" doc:id="f91746ec-fab7-4cd4-a9cb-80079929d150" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 404,
+	message: error.description
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+							<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="ee9fd069-dcdf-4f80-9150-ac1b73ef12d6" message="end log" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0597453c-48bc-46e8-9055-27de068b775d" type="DEMO:INVALID" >
+				<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="22e81c4f-bc8b-4a59-9081-eac009e0a323" message="error raised" />
+				<ee:transform doc:name="Copy_of_Copy_of_Transform Message" doc:id="9c2b4c7c-6156-4b5d-af83-9c77909885db" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatusCode" ><![CDATA[400]]></ee:set-variable>
+						<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad Request"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="error-handlingFlow3" doc:id="acfce2ab-2073-4f12-9096-42459da62a17" >
+		<http:listener doc:name="Listener" doc:id="a3cef419-aea4-4770-8821-63a7233d45f9" config-ref="HTTP_Listener_config" path="/raiseErrorInsideErrorPropagateWithErrorPropagate">
+			<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="841ac4b6-5d31-4b14-a953-b92c9992d42c" message="start log" />
+		<raise-error doc:name="Copy_of_Raise error" doc:id="2d978607-5599-4c9f-90c5-68c1926fcc24" type="DEMO:INVALID" />
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="1c799293-0985-4d9f-8392-e7694ba38749" message="end log" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_Copy_of_Copy_of_On Error Propagate" doc:id="5d2715e0-87fa-494b-a7f6-7ccb0093e882" type="DEMO:INVALID" >
+				<logger level="INFO" doc:name="Copy_of_Logger" doc:id="340f41e7-a2fd-49aa-81ad-818a6c735814" message="error raised" />
+				<try doc:name="Try" doc:id="c2761754-6e11-4768-9a29-724d5c8fc3c1" >
+					<raise-error doc:name="reporting kafka" doc:id="c067d68b-e636-456e-a0f6-4a63c720f32b" type="ANY" />
+					<error-handler >
+						<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="45a6ac7d-abf1-44b0-8efc-a3bc32f17458" type="ANY">
+							<ee:transform doc:name="setting error payload when kafkaerror" doc:id="b6500fb6-3567-43a2-bdd2-11be422040b4" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : "captured eroor in error handling section/while calling kafka",
+	message: error.description
+}]]></ee:set-payload>
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="httpStatusCode" ><![CDATA[502]]></ee:set-variable>
+									<ee:set-variable variableName="reasonPhrase" ><![CDATA["server error"]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+						</on-error-propagate>
+					</error-handler>
+				</try>
+				<ee:transform doc:name="setting success response when kafks success" doc:id="e82d1d32-42a3-45b9-b219-88d09cc34566" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: "error reported successfully in kafka, correct process, always use on error propagae for kafka request try block, if reported successfull flow moved to next transfor otherwise floe shifted to on error transform"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatusCode" ><![CDATA[200]]></ee:set-variable>
+						<ee:set-variable variableName="reasonPhrase" ><![CDATA["OK"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="Copy_of_error-handlingFlow3" doc:id="3ee81435-862e-476d-9a99-6397f9d87b8e" >
+		<http:listener doc:name="Copy_of_Listener" doc:id="e8df5d38-7a5f-4a12-a043-ad3737dea732" config-ref="HTTP_Listener_config" path="/raiseErrorInsideErrorPropagateWithErrorContinue" >
+			<http:error-response statusCode="#[vars.httpStatusCode]" reasonPhrase="#[vars.reasonPhrase]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="d55d0bca-b8f9-48be-83cd-f0e580d1d5ed" message="start log" />
+		<raise-error doc:name="Copy_of_Copy_of_Raise error" doc:id="15ca9e9c-1120-441f-a373-71206e8f1063" type="DEMO:INVALID" />
+		<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="b15333d5-86d6-4f83-985c-65355626d945" message="end log" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_Copy_of_Copy_of_Copy_of_On Error Propagate" doc:id="60151d30-c82c-4b32-8038-455a6dc348a6" type="DEMO:INVALID" >
+				<logger level="INFO" doc:name="Copy_of_Copy_of_Logger" doc:id="e4be57ee-0a4d-4793-89ec-8ec059ac2a1c" message="error raised" />
+				<try doc:name="Copy_of_Try" doc:id="e71ddd2d-2fa2-4350-8f52-12fbcd5438f6" >
+					<raise-error doc:name="reporting kafka" doc:id="6c48d2f5-9123-40f7-baea-5f8c4d62d69a" type="ANY" />
+					<error-handler>
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="23fd99f7-f74e-4210-a47d-a6ed82bce9e4" type="ANY">
+							<ee:transform doc:name="setting error payload when kafkaerror" doc:id="5739d114-b6c8-4995-b121-88a3ed8e4139" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : "captured eroor in error handling section/while calling kafka",
+	message: "error reported successfully in kafka, not a crt process coz if u use onerror continue even error raised flow will continue to execute and shift to success response transorm"
+}]]></ee:set-payload>
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="httpStatusCode" ><![CDATA[502]]></ee:set-variable>
+									<ee:set-variable variableName="reasonPhrase" ><![CDATA["server error"]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+						</on-error-continue>
+					</error-handler>
+				</try>
+				<ee:transform doc:name="setting success response when kafks success" doc:id="8afdd2cc-4d31-4604-a74e-00705655cc4c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statue : 400,
+	message: "not a crt process coz if u use onerror continue even error raised or not flow will always continue to execute and shift to success response transorm"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatusCode"><![CDATA[200]]></ee:set-variable>
+				<ee:set-variable variableName="reasonPhrase"><![CDATA["OK"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
